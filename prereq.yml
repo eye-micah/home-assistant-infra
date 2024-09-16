@@ -1,0 +1,52 @@
+---
+- name: Prerequisite hardening
+  gather_facts: false
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages to latest
+      apt:
+        upgrade: dist
+
+    - name: Disable root login via SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify: Restart SSH
+
+    - name: Install UFW
+      apt:
+        name: ufw
+        state: present
+
+    - name: Set default UFW policy
+      ufw:
+        default: deny incoming
+        direction: incoming
+
+    - name: Allow Home Assistant port 8123
+        ufw:
+          rule: allow
+          port: 8123
+          proto: tcp
+
+    - name: Allow SSH port 22
+        ufw:
+          rule: allow
+          port: 22
+          proto: tcp
+
+    - name: Enable automatic updates
+      copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+

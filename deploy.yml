@@ -1,0 +1,49 @@
+---
+- name: Install Home Assistant service on Debian
+  gather_facts: false
+  hosts: all
+  become: true
+  
+  vars: 
+    hass_user: homeassistant
+    hass_deps:
+      - python3
+      - python3-dev
+      - python3-venv
+      - python3-pip
+      - bluez
+      - libffi-dev
+      - libssl-dev
+      - libjpeg-dev
+      - zlib1g-dev
+      - autoconf
+      - build-essential
+      - libopenjp2-7
+      - libtiff6
+      - libturbojpeg0-dev
+      - tzdata
+      - ffmpeg
+      - liblapack3
+      - liblapack-dev
+      - libatlas-base-dev 
+
+  tasks:
+    - name: Install dependency list
+      apt:
+        name: "{{ hass_deps }}"
+        state: present
+
+    - name: Create H-A user with home directory
+      user:
+        name: "{{ hass_user }}"
+        system: yes
+        create_home: yes
+        state: present
+
+    - name: Create directory for HA Core
+      file:
+        state: directory
+        path: /srv/homeassistant
+        owner: "{{ hass_user }}"
+        group: "{{ hass_user }}"
+        recurse: true
